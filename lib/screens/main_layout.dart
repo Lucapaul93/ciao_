@@ -37,12 +37,22 @@ class _MainLayoutState extends State<MainLayout> {
   void _onItemSelected(int index) {
     // Se l'utente sta selezionando "Crea Storia" (indice 1), mostra un annuncio
     if (index == 1) {
-      _adService.showInterstitialAd();
+      // Prima precarichiamo l'annuncio e poi lo mostriamo
+      _adService.preloadAd().then((_) {
+        // Piccolo ritardo per assicurarsi che l'annuncio sia caricato
+        Future.delayed(const Duration(milliseconds: 300), () {
+          _adService.showInterstitialAd().then((_) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          });
+        });
+      });
+    } else {
+      setState(() {
+        _selectedIndex = index;
+      });
     }
-
-    setState(() {
-      _selectedIndex = index;
-    });
   }
 
   @override

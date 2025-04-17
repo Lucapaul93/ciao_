@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lottie/lottie.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/responsive_size.dart';
 import 'home_screen.dart';
 import 'main_layout.dart';
 
@@ -16,8 +17,19 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  final int _numPages = 3;
+  final int _numPages = 5;
   bool _isTransitioning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Inizializza le dimensioni responsive
+    Future.delayed(Duration.zero, () {
+      if (mounted) {
+        ResponsiveSize.init(context);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -66,19 +78,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Assicuriamoci che ResponsiveSize sia inizializzato
+    ResponsiveSize.init(context);
+
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final size = MediaQuery.of(context).size;
+    final mediaQuery = MediaQuery.of(context);
+    final viewPadding = mediaQuery.viewPadding;
+    final isTablet = ResponsiveSize.isTablet;
 
-    // Dimensioni proporzionali
-    final buttonFontSize = size.width * 0.045;
-    final skipButtonSize = size.width * 0.04;
-    final indicatorWidth = size.width * 0.06;
-    final indicatorHeight = size.height * 0.01;
+    // Calcola dimensioni responsive
+    final indicatorWidth = ResponsiveSize.wp(isTablet ? 4.0 : 6.0);
+    final indicatorHeight = ResponsiveSize.hp(isTablet ? 0.7 : 1.0);
+
+    // Padding più compatto per tablet
     final buttonPadding = EdgeInsets.symmetric(
-      horizontal: size.width * 0.08,
-      vertical: size.height * 0.015,
+      horizontal: ResponsiveSize.wp(isTablet ? 4.0 : 8.0),
+      vertical: ResponsiveSize.hp(isTablet ? 1.0 : 1.5),
     );
+
+    // Font size più appropriate
+    final buttonFontSize = ResponsiveSize.sp(isTablet ? 3.5 : 4.5);
+    final skipButtonSize = ResponsiveSize.sp(isTablet ? 3.0 : 4.0);
 
     return Scaffold(
       body: Stack(
@@ -94,84 +115,105 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           // Contenuto principale
           SafeArea(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Carosello
                 Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    onPageChanged: (int page) {
-                      setState(() {
-                        _currentPage = page;
-                      });
-                    },
-                    children: [
-                      _buildPage(
-                        context,
-                        'assets/immagine1.png',
-                        'Crea Storie Magiche',
-                        'Personalizza storie uniche per i tuoi bambini con pochi semplici clic',
-                        1,
-                      ),
-                      _buildPage(
-                        context,
-                        'assets/immagine2.png',
-                        'Salva i Tuoi Preferiti',
-                        'Conserva tutte le storie che ami in un posto facilmente accessibile',
-                        2,
-                      ),
-                      _buildPage(
-                        context,
-                        'assets/immagine3.png',
-                        'Scopri Storie Casuali',
-                        'Lasciati sorprendere da nuove avventure generate automaticamente',
-                        3,
-                      ),
-                    ],
+                  child: Center(
+                    child: PageView(
+                      controller: _pageController,
+                      onPageChanged: (int page) {
+                        setState(() {
+                          _currentPage = page;
+                        });
+                      },
+                      children: [
+                        _buildPage(
+                          context,
+                          'assets/immagine1.png',
+                          'Crea Storie Magiche',
+                          'Personalizza storie uniche per i tuoi bambini con pochi semplici clic',
+                          1,
+                        ),
+                        _buildPage(
+                          context,
+                          'assets/immagine2.png',
+                          'Salva i Tuoi Preferiti',
+                          'Conserva tutte le storie che ami in un posto facilmente accessibile',
+                          2,
+                        ),
+                        _buildPage(
+                          context,
+                          'assets/immagine3.png',
+                          'Scopri Storie Casuali',
+                          'Lasciati sorprendere da nuove avventure generate automaticamente',
+                          3,
+                        ),
+                        _buildPage(
+                          context,
+                          'assets/immagine4.png',
+                          'Storie a Bivi',
+                          'Scegli tu il percorso della storia! Ad ogni bivio, decidi come proseguire l\'avventura',
+                          4,
+                        ),
+                        _buildPage(
+                          context,
+                          'assets/immagine5.png',
+                          'Personalizza con il Nome',
+                          'Inserisci il nome del tuo bambino e vedilo diventare il protagonista della storia',
+                          5,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
                 // Indicatori e pulsanti
-                Padding(
+                Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: size.width * 0.06,
-                    vertical: size.height * 0.025,
+                    horizontal: ResponsiveSize.wp(6.0),
+                    vertical: ResponsiveSize.hp(2.0),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Indicatori di pagina
-                      Row(
-                        children: List.generate(
-                          _numPages,
-                          (index) => _buildPageIndicator(
-                            index == _currentPage,
-                            indicatorWidth,
-                            indicatorHeight,
+                  width: double.infinity,
+                  child: SafeArea(
+                    top: false,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Indicatori di pagina
+                        Row(
+                          children: List.generate(
+                            _numPages,
+                            (index) => _buildPageIndicator(
+                              index == _currentPage,
+                              indicatorWidth,
+                              indicatorHeight,
+                            ),
                           ),
                         ),
-                      ),
 
-                      // Pulsante Avanti/Inizia
-                      ElevatedButton(
-                        onPressed: _isTransitioning ? null : _goToNextPage,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: Colors.white,
-                          padding: buttonPadding,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30.0),
+                        // Pulsante Avanti/Inizia
+                        ElevatedButton(
+                          onPressed: _isTransitioning ? null : _goToNextPage,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colorScheme.primary,
+                            foregroundColor: Colors.white,
+                            padding: buttonPadding,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30.0),
+                            ),
+                            elevation: 4,
                           ),
-                          elevation: 4,
-                        ),
-                        child: Text(
-                          _currentPage < _numPages - 1 ? 'Avanti' : 'Inizia',
-                          style: TextStyle(
-                            fontSize: buttonFontSize,
-                            fontWeight: FontWeight.bold,
+                          child: Text(
+                            _currentPage < _numPages - 1 ? 'Avanti' : 'Inizia',
+                            style: TextStyle(
+                              fontSize: buttonFontSize,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -180,18 +222,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
           // Pulsante salta
           Positioned(
-            top: size.height * 0.05,
-            right: size.width * 0.05,
+            top: viewPadding.top + ResponsiveSize.hp(2.0),
+            right: ResponsiveSize.wp(5.0),
             child: TextButton(
               onPressed: _isTransitioning ? null : _completeOnboarding,
               child: Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: size.width * 0.05,
-                  vertical: size.height * 0.01,
+                  horizontal: ResponsiveSize.wp(4.0),
+                  vertical: ResponsiveSize.hp(1.0),
                 ),
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.4),
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.2),
+                    width: 1,
+                  ),
                 ),
                 child: Text(
                   'Salta',
@@ -202,7 +248,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                 ),
               ),
-            ),
+            ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.2, end: 0),
           ),
 
           // Lottie animation overlay tra le transizioni
@@ -225,149 +271,133 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     String description,
     int pageNumber,
   ) {
+    ResponsiveSize.init(context);
     final theme = Theme.of(context);
-    final size = MediaQuery.of(context).size;
+    final isTablet = ResponsiveSize.isTablet;
 
-    // Dimensioni proporzionali allo schermo
-    final imageSize = size.width * 0.75;
-    final titleSize = size.width * 0.06;
-    final descriptionSize = size.width * 0.042;
-    final containerPadding = size.width * 0.05;
-    final decorationSize = size.width * 0.12;
+    // Dimensioni proporzionali allo schermo, ottimizzate sia per tablet che per smartphone
+    final imageSize =
+        isTablet
+            ? ResponsiveSize.wp(60.0) // Più piccola in percentuale su tablet
+            : ResponsiveSize.wp(75.0);
 
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Spazio superiore
-          const Spacer(flex: 1),
+    final titleSize = ResponsiveSize.sp(isTablet ? 5.0 : 6.0);
+    final descriptionSize = ResponsiveSize.sp(isTablet ? 3.5 : 4.2);
+    final containerPadding = ResponsiveSize.wp(isTablet ? 3.0 : 5.0);
+    final decorationSize = ResponsiveSize.wp(isTablet ? 9.0 : 12.0);
 
-          // Immagine principale con effetto 3D
-          Container(
-                height: imageSize,
-                width: imageSize,
+    return Center(
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: ResponsiveSize.wp(isTablet ? 3.0 : 6.0),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Immagine principale con effetto 3D
+              Container(
+                    height: imageSize,
+                    width: imageSize,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.5),
+                          blurRadius: 30,
+                          spreadRadius: 5,
+                          offset: const Offset(0, 10),
+                        ),
+                        BoxShadow(
+                          color: Colors.white.withOpacity(0.15),
+                          blurRadius: 20,
+                          spreadRadius: -5,
+                          offset: const Offset(0, -8),
+                        ),
+                      ],
+                    ),
+                    child: Transform(
+                      transform:
+                          Matrix4.identity()
+                            ..setEntry(3, 2, 0.001)
+                            ..rotateX(0.05)
+                            ..rotateY(-0.05),
+                      alignment: FractionalOffset.center,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Image.asset(imagePath, fit: BoxFit.cover),
+                      ),
+                    ),
+                  )
+                  .animate()
+                  .fadeIn(duration: 800.ms, delay: 300.ms)
+                  .scale(begin: const Offset(0.8, 0.8)),
+
+              SizedBox(height: ResponsiveSize.hp(4.0)),
+
+              // Contenitore per titolo e descrizione
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(containerPadding),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    // Ombra più profonda per dare rilievo
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.5),
-                      blurRadius: 30,
-                      spreadRadius: 5,
-                      offset: const Offset(0, 10),
-                    ),
-                    // Highlight
-                    BoxShadow(
-                      color: Colors.white.withOpacity(0.15),
-                      blurRadius: 20,
-                      spreadRadius: -5,
-                      offset: const Offset(0, -8),
-                    ),
-                  ],
-                ),
-                child: Transform(
-                  transform:
-                      Matrix4.identity()
-                        ..setEntry(3, 2, 0.001) // Aggiunge prospettiva
-                        ..rotateX(0.05) // Leggera rotazione per effetto 3D
-                        ..rotateY(-0.05),
-                  alignment: FractionalOffset.center,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Image.asset(imagePath, fit: BoxFit.cover),
+                  color: Colors.black.withOpacity(0.6),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.1),
+                    width: 1,
                   ),
                 ),
-              )
-              .animate()
-              .fadeIn(duration: 800.ms, delay: 300.ms)
-              .scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1)),
+                child: Column(
+                  children: [
+                    Text(
+                          title,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: titleSize,
+                          ),
+                          textAlign: TextAlign.center,
+                        )
+                        .animate()
+                        .fadeIn(duration: 600.ms, delay: 500.ms)
+                        .slideY(begin: 0.3, end: 0),
 
-          SizedBox(height: size.height * 0.04),
+                    SizedBox(height: ResponsiveSize.hp(2.0)),
 
-          // Contenitore per titolo e descrizione con sfondo semi-trasparente
-          Container(
-            width: size.width * 0.85,
-            padding: EdgeInsets.all(containerPadding),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.6),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.1),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 10,
-                  spreadRadius: 1,
+                    Text(
+                          description,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: descriptionSize,
+                            height: 1.4,
+                          ),
+                          textAlign: TextAlign.center,
+                        )
+                        .animate()
+                        .fadeIn(duration: 600.ms, delay: 700.ms)
+                        .slideY(begin: 0.3, end: 0),
+                  ],
                 ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // Titolo
-                Text(
-                      title,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: titleSize,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withOpacity(0.8),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      textAlign: TextAlign.center,
-                    )
-                    .animate()
-                    .fadeIn(duration: 600.ms, delay: 500.ms)
-                    .slideY(begin: 0.3, end: 0),
+              ),
 
-                SizedBox(height: size.height * 0.015),
+              SizedBox(height: ResponsiveSize.hp(4.0)),
 
-                // Descrizione
-                Text(
-                      description,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: Colors.white.withOpacity(0.9),
-                        height: 1.4,
-                        fontSize: descriptionSize,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withOpacity(0.5),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      textAlign: TextAlign.center,
-                    )
-                    .animate()
-                    .fadeIn(duration: 600.ms, delay: 700.ms)
-                    .slideY(begin: 0.3, end: 0),
-              ],
-            ),
+              // Decorazione
+              SizedBox(
+                    width: decorationSize,
+                    height: decorationSize,
+                    child: _buildPageDecoration(
+                      pageNumber,
+                      decorationSize * 0.5,
+                    ),
+                  )
+                  .animate()
+                  .fadeIn(duration: 800.ms, delay: 900.ms)
+                  .scale(begin: const Offset(0, 0)),
+            ],
           ),
-
-          // Spazio inferiore
-          const Spacer(flex: 2),
-
-          // Decorazione piccola relativa alla pagina
-          SizedBox(
-                width: decorationSize,
-                height: decorationSize,
-                child: _buildPageDecoration(pageNumber, decorationSize * 0.5),
-              )
-              .animate()
-              .fadeIn(duration: 800.ms, delay: 900.ms)
-              .scale(begin: const Offset(0, 0), end: const Offset(1, 1)),
-
-          SizedBox(height: size.height * 0.02),
-        ],
+        ),
       ),
     );
   }
@@ -377,12 +407,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       FontAwesomeIcons.wandMagicSparkles,
       FontAwesomeIcons.solidHeart,
       FontAwesomeIcons.dice,
+      FontAwesomeIcons.road,
+      FontAwesomeIcons.child,
     ];
 
     final colors = [
       const Color(0xFF9C27B0),
       const Color(0xFFFF7A8A),
       const Color(0xFF64DFDF),
+      const Color(0xFFFFA726),
+      const Color(0xFF4CAF50),
     ];
 
     return Container(

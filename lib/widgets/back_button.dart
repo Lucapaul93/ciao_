@@ -10,8 +10,14 @@ class CustomBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Verifica se è possibile tornare indietro
-    final canPop = Navigator.of(context).canPop();
+    // Verifica se è possibile tornare indietro usando un BuildContext valido
+    bool canPop = false;
+    try {
+      canPop = Navigator.of(context, rootNavigator: true).canPop();
+    } catch (e) {
+      debugPrint('Errore nel controllo della navigazione: $e');
+      return const SizedBox.shrink();
+    }
 
     // Se non è possibile tornare indietro, non mostra il pulsante
     if (!canPop) {
@@ -31,13 +37,17 @@ class CustomBackButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap:
-              onPressed ??
-              () {
-                if (Navigator.of(context).canPop()) {
-                  Navigator.pop(context);
-                }
-              },
+          onTap: () {
+            try {
+              if (onPressed != null) {
+                onPressed!();
+              } else if (Navigator.of(context, rootNavigator: true).canPop()) {
+                Navigator.pop(context);
+              }
+            } catch (e) {
+              debugPrint('Errore durante la navigazione: $e');
+            }
+          },
           child: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(

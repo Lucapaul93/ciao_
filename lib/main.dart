@@ -8,6 +8,10 @@ import 'providers/theme_provider.dart';
 import 'utils/performance_utils.dart';
 import 'utils/responsive_size.dart';
 import 'services/ad_service.dart';
+import 'services/audio_service.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 
 // Importa le future schermate (che creeremo tra poco)
 import 'screens/home_screen.dart';
@@ -23,14 +27,41 @@ void main() async {
   // Inizializzo le impostazioni di performance
   await PerformanceConfig.init();
 
-  // Inizializzo il servizio pubblicitario
+  // Inizializziamo Google Mobile Ads SDK solo se non siamo su web
+  if (!kIsWeb) {
+    try {
+      await MobileAds.instance.initialize();
+      debugPrint('🚀 AdMob inizializzato con successo');
+
+      // Per dispositivi fisici, prepara la configurazione e ottimizza il debug
+      if (!kDebugMode) {
+        debugPrint(
+          '📱 Dispositivo fisico rilevato, configuro AdMob per produzione',
+        );
+      } else {
+        debugPrint(
+          '🔧 Modalità debug attiva, configurazioni aggiuntive per il test',
+        );
+        // Per i dispositivi di test, potrebbero essere necessarie configurazioni aggiuntive
+      }
+    } catch (e) {
+      debugPrint('❌ Errore nell\'inizializzazione di AdMob: $e');
+    }
+  }
+
+  // Inizializzo il servizio pubblicitario DOPO aver inizializzato MobileAds
   await AdService().initialize();
 
-  // Impostiamo l'orientamento preferito (verticale)
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  // Inizializzo il servizio audio
+  await AudioService().initialize();
+
+  // Impostiamo l'orientamento preferito (verticale) solo su piattaforme mobili
+  if (!kIsWeb) {
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+  }
 
   // Impostiamo la modalità edge-to-edge per sfruttare tutto lo spazio disponibile
   SystemChrome.setEnabledSystemUIMode(
@@ -49,7 +80,12 @@ void main() async {
     ),
   );
 
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -57,35 +93,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
-          return MaterialApp(
-            title: 'Storia Magica',
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode:
-                themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-            builder: (context, child) {
-              // Inizializziamo ResponsiveSize per tutto il sistema
-              ResponsiveSize.init(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
-              // Applica il fattore di scala del testo utilizzando solo textScaler
-              return MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                  // Usiamo solo textScaler e non textScaleFactor (che è deprecato)
-                  textScaler: TextScaler.linear(themeProvider.textScaleFactor),
-                ),
-                child: child!,
-              );
-            },
-            // Disabilita il debug banner
-            debugShowCheckedModeBanner: false,
-            home: const SplashScreen(),
-          );
-        },
-      ),
+    return MaterialApp(
+      title: 'Storia Magica',
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      builder: (context, child) {
+        // Inizializza ResponsiveSize qui per assicurarsi che sia disponibile in tutta l'app
+        ResponsiveSize.init(context);
+
+        // Applica il fattore di scala del testo utilizzando solo textScaler
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            // Usiamo solo textScaler e non textScaleFactor (che è deprecato)
+            textScaler: TextScaler.linear(themeProvider.textScaleFactor),
+          ),
+          child: child!,
+        );
+      },
+      // Disabilita il debug banner
+      debugShowCheckedModeBanner: false,
+      home: const SplashScreen(),
     );
   }
 }
@@ -103,6 +133,9 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     _checkOnboardingStatus();
+
+    // Avvia la musica di sottofondo
+    AudioService().playBackgroundMusic();
   }
 
   Future<void> _checkOnboardingStatus() async {

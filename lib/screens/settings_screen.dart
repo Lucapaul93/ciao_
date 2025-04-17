@@ -8,6 +8,7 @@ import '../widgets/screen_with_particles.dart';
 import '../providers/theme_provider.dart';
 import '../utils/performance_utils.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import '../screens/privacy_policy_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -219,196 +220,256 @@ class SettingsScreen extends StatelessWidget {
           child: Stack(
             children: [
               Padding(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: Text(
-                            'Impostazioni',
-                            style: Theme.of(context).textTheme.displayMedium,
-                            textAlign: TextAlign.center,
+                padding: EdgeInsets.fromLTRB(16, 56, 16, 16),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                              'Impostazioni',
+                              style: Theme.of(context).textTheme.displayMedium,
+                              textAlign: TextAlign.center,
+                            )
+                            .animate()
+                            .fadeIn(duration: 600.ms)
+                            .slideX(begin: -0.2, end: 0),
+                      ),
+                      const SizedBox(height: 20),
+                      Consumer<ThemeProvider>(
+                        builder: (context, themeProvider, _) {
+                          return ListTile(
+                                leading: const Icon(FontAwesomeIcons.moon),
+                                title: Text(
+                                  'Tema Scuro',
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                                trailing: Switch(
+                                  value: themeProvider.isDarkMode,
+                                  onChanged: (value) {
+                                    themeProvider.toggleTheme();
+                                  },
+                                ),
+                              )
+                              .animate()
+                              .fadeIn(delay: 200.ms)
+                              .slideX(begin: 0.2, end: 0);
+                        },
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      Consumer<ThemeProvider>(
+                        builder: (context, themeProvider, _) {
+                          return ListTile(
+                                leading: Icon(
+                                  themeProvider.isMusicEnabled
+                                      ? FontAwesomeIcons.music
+                                      : FontAwesomeIcons.volumeXmark,
+                                  color:
+                                      themeProvider.isMusicEnabled
+                                          ? Colors.purple
+                                          : Colors.grey,
+                                ),
+                                title: Text(
+                                  'Musica di Sottofondo',
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                                trailing: Switch(
+                                  value: themeProvider.isMusicEnabled,
+                                  onChanged: (value) {
+                                    themeProvider.setMusicEnabled(value);
+                                  },
+                                ),
+                              )
+                              .animate()
+                              .fadeIn(delay: 300.ms)
+                              .slideX(begin: 0.2, end: 0);
+                        },
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      ListTile(
+                            leading: const Icon(FontAwesomeIcons.font),
+                            title: Text(
+                              'Dimensione Testo',
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => _showTextSizeSelector(context),
                           )
                           .animate()
-                          .fadeIn(duration: 600.ms)
-                          .slideX(begin: -0.2, end: 0),
-                    ),
-                    const SizedBox(height: 20),
-                    Consumer<ThemeProvider>(
-                      builder: (context, themeProvider, _) {
-                        return ListTile(
-                              leading: const Icon(FontAwesomeIcons.moon),
-                              title: Text(
-                                'Tema Scuro',
-                                style: Theme.of(context).textTheme.bodyLarge,
-                              ),
-                              trailing: Switch(
-                                value: themeProvider.isDarkMode,
-                                onChanged: (value) {
-                                  themeProvider.toggleTheme();
-                                },
-                              ),
-                            )
-                            .animate()
-                            .fadeIn(delay: 200.ms)
-                            .slideX(begin: 0.2, end: 0);
-                      },
-                    ),
-                    const SizedBox(height: 10),
-                    ListTile(
-                          leading: const Icon(FontAwesomeIcons.font),
-                          title: Text(
-                            'Dimensione Testo',
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => _showTextSizeSelector(context),
-                        )
-                        .animate()
-                        .fadeIn(delay: 400.ms)
-                        .slideX(begin: 0.2, end: 0),
+                          .fadeIn(delay: 400.ms)
+                          .slideX(begin: 0.2, end: 0),
 
-                    const SizedBox(height: 10),
-                    StatefulBuilder(
-                      builder: (context, setState) {
-                        return ListTile(
-                              leading: const Icon(
-                                FontAwesomeIcons.wandMagicSparkles,
-                              ),
-                              title: Text(
-                                'Effetti Particelle',
-                                style: Theme.of(context).textTheme.bodyLarge,
-                              ),
-                              trailing: Switch(
-                                value: PerformanceConfig.particlesEnabled,
-                                onChanged: (value) async {
-                                  await PerformanceConfig.setParticlesEnabled(
-                                    value,
-                                  );
-                                  setState(() {});
-                                },
-                              ),
-                            )
-                            .animate()
-                            .fadeIn(delay: 500.ms)
-                            .slideX(begin: 0.2, end: 0);
-                      },
-                    ),
-
-                    const SizedBox(height: 10),
-                    ListTile(
-                          leading: const Icon(
-                            FontAwesomeIcons.trash,
-                            color: Colors.red,
-                          ),
-                          title: Text(
-                            'Elimina Storie Salvate',
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => _clearAllStories(context),
-                        )
-                        .animate()
-                        .fadeIn(delay: 600.ms)
-                        .slideX(begin: 0.2, end: 0),
-
-                    const SizedBox(height: 10),
-                    ListTile(
-                          leading: const Icon(
-                            FontAwesomeIcons.circleInfo,
-                            color: Colors.blue,
-                          ),
-                          title: Text(
-                            'Informazioni',
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => _showAppInfo(context),
-                        )
-                        .animate()
-                        .fadeIn(delay: 700.ms)
-                        .slideX(begin: 0.2, end: 0),
-
-                    const SizedBox(height: 20),
-                    // Sezione performance avanzate
-                    Text(
-                      'Prestazioni Avanzate',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      const SizedBox(height: 10),
+                      StatefulBuilder(
+                        builder: (context, setState) {
+                          return ListTile(
+                                leading: const Icon(
+                                  FontAwesomeIcons.wandMagicSparkles,
+                                ),
+                                title: Text(
+                                  'Effetti Particelle',
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                                trailing: Switch(
+                                  value: PerformanceConfig.particlesEnabled,
+                                  onChanged: (value) async {
+                                    await PerformanceConfig.setParticlesEnabled(
+                                      value,
+                                    );
+                                    setState(() {});
+                                  },
+                                ),
+                              )
+                              .animate()
+                              .fadeIn(delay: 500.ms)
+                              .slideX(begin: 0.2, end: 0);
+                        },
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 10),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            Text(
-                              'Ottimizza le prestazioni modificando queste impostazioni se l\'app risulta lenta sul tuo dispositivo.',
-                              style: Theme.of(context).textTheme.bodySmall,
-                              textAlign: TextAlign.center,
+
+                      const SizedBox(height: 10),
+                      ListTile(
+                            leading: const Icon(
+                              FontAwesomeIcons.trash,
+                              color: Colors.red,
                             ),
-                            const SizedBox(height: 16),
-                            StatefulBuilder(
-                              builder: (context, setState) {
-                                return Column(
-                                  children: [
-                                    Text(
-                                      'Numero di particelle: ${PerformanceConfig.particlesCount}',
-                                      style:
-                                          Theme.of(
-                                            context,
-                                          ).textTheme.bodyMedium,
-                                    ),
-                                    Slider(
-                                      value:
-                                          PerformanceConfig.particlesCount
-                                              .toDouble(),
-                                      min: 0,
-                                      max: 60,
-                                      divisions: 12,
-                                      label:
-                                          PerformanceConfig.particlesCount
-                                              .toString(),
-                                      onChanged: (value) async {
-                                        await PerformanceConfig.setParticlesCount(
-                                          value.toInt(),
-                                        );
-                                        setState(() {});
-                                      },
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          'Meno (più veloce)',
-                                          style:
-                                              Theme.of(
-                                                context,
-                                              ).textTheme.bodySmall,
-                                        ),
-                                        Text(
-                                          'Più (più bello)',
-                                          style:
-                                              Theme.of(
-                                                context,
-                                              ).textTheme.bodySmall,
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                );
-                              },
+                            title: Text(
+                              'Elimina Storie Salvate',
+                              style: Theme.of(context).textTheme.bodyLarge,
                             ),
-                          ],
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => _clearAllStories(context),
+                          )
+                          .animate()
+                          .fadeIn(delay: 600.ms)
+                          .slideX(begin: 0.2, end: 0),
+
+                      const SizedBox(height: 10),
+                      ListTile(
+                            leading: const Icon(
+                              FontAwesomeIcons.circleInfo,
+                              color: Colors.blue,
+                            ),
+                            title: Text(
+                              'Informazioni',
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => _showAppInfo(context),
+                          )
+                          .animate()
+                          .fadeIn(delay: 700.ms)
+                          .slideX(begin: 0.2, end: 0),
+
+                      const SizedBox(height: 10),
+                      ListTile(
+                            leading: const Icon(
+                              FontAwesomeIcons.shield,
+                              color: Colors.green,
+                            ),
+                            title: Text(
+                              'Privacy Policy',
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => const PrivacyPolicyScreen(),
+                                ),
+                              );
+                            },
+                          )
+                          .animate()
+                          .fadeIn(delay: 800.ms)
+                          .slideX(begin: 0.2, end: 0),
+
+                      const SizedBox(height: 20),
+                      // Sezione performance avanzate
+                      Text(
+                        'Prestazioni Avanzate',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 10),
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            children: [
+                              Text(
+                                'Ottimizza le prestazioni modificando queste impostazioni se l\'app risulta lenta sul tuo dispositivo.',
+                                style: Theme.of(context).textTheme.bodySmall,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              StatefulBuilder(
+                                builder: (context, setState) {
+                                  return Column(
+                                    children: [
+                                      Text(
+                                        'Numero di particelle: ${PerformanceConfig.particlesCount}',
+                                        style:
+                                            Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium,
+                                      ),
+                                      Slider(
+                                        value:
+                                            PerformanceConfig.particlesCount
+                                                .toDouble(),
+                                        min: 0,
+                                        max: 60,
+                                        divisions: 12,
+                                        label:
+                                            PerformanceConfig.particlesCount
+                                                .toString(),
+                                        onChanged: (value) async {
+                                          await PerformanceConfig.setParticlesCount(
+                                            value.toInt(),
+                                          );
+                                          setState(() {});
+                                        },
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            'Meno (più veloce)',
+                                            style:
+                                                Theme.of(
+                                                  context,
+                                                ).textTheme.bodySmall,
+                                          ),
+                                          Text(
+                                            'Più (più bello)',
+                                            style:
+                                                Theme.of(
+                                                  context,
+                                                ).textTheme.bodySmall,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               const CustomBackButton(),
